@@ -32,9 +32,10 @@ public class GetAllUrlLinks {
     private final String SHOE_TYPE = "Jordan_3";
     private int count;
 
-    public GetAllUrlLinks() {
+    public GetAllUrlLinks(int c) {
         links = new HashSet<>();
         img = new HashSet<>();
+        count  = c;
         //webDriver = webDriverin;
 
     }
@@ -71,24 +72,23 @@ public class GetAllUrlLinks {
                 //for loop prints out all links on page for testign purposes - delete when complete or replace with recursive function call 
                 for (int i = 0; i <= listOfLinks.size() - 1; i++) {
                     String StrLink = listOfLinks.get(i).getAttribute("href");
-                    if ((StrLink != null) && StrLink.contains("https://www.google.com/search?q=jordan+3")) {
+
+                    if ((StrLink != null) && StrLink.contains("/imgres?imgurl=https")) {
                         System.out.println("Link address: " + StrLink);
-                    }else{
+                    } else {
                         listOfLinks.remove(i); //remove any invalid links that we dont want 
                     }
                 }
+
+                //for loop recursively calls getpagelinks
+                for (int r = 0; r <= listOfLinks.size() - 1; r++) {
+                    String StrLink = listOfLinks.get(r).getAttribute("href");
+                    if ((StrLink != null) && StrLink.contains("/imgres?imgurl=https")) {
+                        getPageLinks(StrLink, depth); //Disable untill we can get first page to downlaod
+                    }
+                }
             }
-
-//                //for loop recursively calls getpagelinks
-//                for (int r = 0; r <= listOfLinks.size() - 1; r++) {
-//                    String StrLink = listOfLinks.get(r).getAttribute("href");
-//                    if (StrLink != null && StrLink.contains("/images/search?")) {
-//                        getPageLinks(StrLink, depth); //Disable untill we can get first page to downlaod
-//                    }
-//                }
-//           }
         }
-
     }
 
 }
