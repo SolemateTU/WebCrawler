@@ -11,8 +11,10 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -23,70 +25,60 @@ import org.openqa.selenium.chrome.ChromeDriver;
  */
 public class GetAllUrlLinks {
 
-    // private List<WebElement> no;
-    private List urls; //old
     private HashSet<String> links;
-    private static final int MAX_DEPTH = 3;
-    private final HashSet<String> img;
-    private final String IMAGE_DESTINATION_FOLDER = "C:\\Users\\Paul\\Documents\\Crawl\\";
+    private static final int MAX_DEPTH = 10;
+    //private final String IMAGE_DESTINATION_FOLDER = "C:\\Users\\Paul\\Documents\\Crawl\\Jordan_3";
+    private final String IMAGE_DESTINATION_FOLDER = "C:\\Users\\Paul\\Documents\\Crawl\\cats";
+
     private final String SHOE_TYPE = "Jordan_3";
     private int count;
 
     public GetAllUrlLinks(int c) {
         links = new HashSet<>();
-        img = new HashSet<>();
-        count  = c;
+        count = c;
         //webDriver = webDriverin;
 
     }
 
-    public void getPageLinks(String URL, int depth) throws MalformedURLException, URISyntaxException, IOException {
-        if ((!links.contains(URL) && (depth < MAX_DEPTH))) {
-            if (!URL.isEmpty()) {
-                System.out.println(">> Depth: " + depth + " [" + URL + "]");
-                links.add(URL);
-                WebDriver webDriver = new ChromeDriver();
-                webDriver.get(URL);
+    public void getPageLinks(String URL, int depth) throws MalformedURLException, URISyntaxException, IOException, InterruptedException {
+        WebDriver webDriver = new ChromeDriver();
+        if ((!links.contains(URL) && (depth < MAX_DEPTH) && !(URL.isEmpty()))) {
+            System.out.println(">> Depth: " + depth + " [" + URL + "]");
+            //links.add(URL);
+            webDriver.get(URL);
 
-                List<WebElement> listOfimg = webDriver.findElements(By.tagName("img"));
-                List<WebElement> listOfLinks = webDriver.findElements(By.tagName("a"));
-                DownloadImage down = new DownloadImage(IMAGE_DESTINATION_FOLDER, SHOE_TYPE, count++);
+            findImagesOnPage(webDriver); //get the images on page
 
-                //This for loop is to attempt to download all pictures on page
-                System.out.println("BEGIN IMAGE DOWNLOAD:******************** There are: " + listOfimg.size() + " images");
+            //for loop recursively calls getpagelinks
+            depth++;
+            for (WebElement link : webDriver.findElements(By.tagName("a"))) {
+                String StrLink = link.getAttribute("href");
 
-                //check list of image
-                for (int k = 0; k < listOfimg.size() - 1; k++) {
-                    String ImgSource = listOfimg.get(k).getAttribute("src");
-                    if ((ImgSource != null) && (ImgSource.length() != 0)) {
-                        down.saveImage(ImgSource);
-                    }
+                if ((StrLink != null) && (StrLink.contains("/imgres?imgurl=https"))) {
+                    webDriver.close();
+                    getPageLinks(StrLink, depth);
                 }
-                System.out.println("END img links:****************");
+            }
 
-                System.out.println("Size of listOfLinks " + listOfLinks.size());
-                depth++;
-                System.out.println("depth incremented: " + depth);
+        } else {
+            System.out.println("REACHED THE END!");
+            webDriver.close();
+            Thread.sleep(4000);
+            webDriver.quit();
+        }
 
-                //GET THE URLs
-                //for loop prints out all links on page for testign purposes - delete when complete or replace with recursive function call 
-                for (int i = 0; i <= listOfLinks.size() - 1; i++) {
-                    String StrLink = listOfLinks.get(i).getAttribute("href");
+    }
 
-                    if ((StrLink != null) && StrLink.contains("/imgres?imgurl=https")) {
-                        System.out.println("Link address: " + StrLink);
-                    } else {
-                        listOfLinks.remove(i); //remove any invalid links that we dont want 
-                    }
-                }
+    private void findImagesOnPage(WebDriver webDriver) throws IOException, URISyntaxException {
+        DownloadImage down = new DownloadImage(IMAGE_DESTINATION_FOLDER, SHOE_TYPE);
+        List<WebElement> listOfimg = webDriver.findElements(By.tagName("img"));
 
-                //for loop recursively calls getpagelinks
-                for (int r = 0; r <= listOfLinks.size() - 1; r++) {
-                    String StrLink = listOfLinks.get(r).getAttribute("href");
-                    if ((StrLink != null) && StrLink.contains("/imgres?imgurl=https")) {
-                        getPageLinks(StrLink, depth); //Disable untill we can get first page to downlaod
-                    }
-                }
+        //This for loop is to attempt to download all pictures on page
+        for (int k = 0; k < listOfimg.size() - 1; k++) {
+            String ImgSource = listOfimg.get(k).getAttribute("src");
+            if ((ImgSource != null) && (ImgSource.length() != 0)) {
+                count++;
+                down.saveImage(ImgSource, count);
             }
         }
     }

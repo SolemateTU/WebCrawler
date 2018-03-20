@@ -18,6 +18,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.Random;
 
 /**
  *
@@ -28,30 +29,31 @@ public class DownloadImage {
 
     private final String IMAGE_DESTINATION_FOLDER;
     private final String SHOE_TYPE;
-    private int COUNT;
-    public DownloadImage(String Dest, String shoe, int count) {
+
+    public DownloadImage(String Dest, String shoe) {
         IMAGE_DESTINATION_FOLDER = Dest;
         SHOE_TYPE = shoe;
-        COUNT = count;
     }
 
     public void saveDataImg(String strImageURL) throws URISyntaxException, MalformedURLException {
-
+        //TODO? is this possible
     }
 
-    public void saveImage(String imageUrl) throws IOException, URISyntaxException {
+    public void saveImage(String imageUrl, int count) throws IOException, URISyntaxException {
         try {
             URL url = new URL(imageUrl);
             String protocol = url.getProtocol();
-            System.out.println("Current protocol is: " + protocol + " The url is: " + url.toString());
+            //System.out.println("Current protocol is: " + protocol + " The url is: " + url.toString());
             if ("data".equals(protocol)) {
                 saveDataImg(imageUrl);
             } else if ("https".equals(protocol) || "http".equals(protocol)) {
                 String fileName = url.getFile();
                 fileName = fileName.substring(fileName.lastIndexOf("/"));
-                if(!(fileName.contains(".jpg") || (fileName.contains(".png")))) {
-                    COUNT++;
-                    fileName = SHOE_TYPE +"_" + COUNT +".jpg";
+                count++;
+                Random rand = new Random();
+                int randNum = rand.nextInt(10000) + 1;
+                if (!(fileName.contains(".jpg") || (fileName.contains(".png")))) {  //deal with the case where the end is not really the .jpg
+                    fileName = SHOE_TYPE + "_" + count +"_"+  randNum + ".jpg";
                 }
                 String destName = IMAGE_DESTINATION_FOLDER + fileName;
                 OutputStream os;
@@ -70,7 +72,7 @@ public class DownloadImage {
                 System.out.println("error, not http or data file");
             }
         } catch (Exception e) {
-            System.out.println("another data formatting thing");
+            //System.out.println("another data formatting thing");
         }
     }
 }
